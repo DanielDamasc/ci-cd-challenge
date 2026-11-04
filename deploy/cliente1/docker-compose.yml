@@ -1,0 +1,30 @@
+services:
+  laravel-app:
+    image: 'laravel-app:latest'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.koalapp.rule=Host(`cliente1.com.br`)"
+      - "traefik.http.routers.koalapp.entrypoints=web"
+      - "traefik.http.routers.koalapp.tls.certresolver=myresolver"
+      - "traefik.http.services.koalapp.loadbalancer.server.port=80"
+    networks:
+      - proxy-nw
+      - client1-nw
+    depends_on:
+      - db1
+
+  db1:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: client1_db
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    networks:
+      - client1-nw
+
+networks:
+  proxy-nw:
+    external: true
+  client1-nw:
+    external: true

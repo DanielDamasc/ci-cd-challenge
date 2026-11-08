@@ -1,14 +1,13 @@
 services:
   phpmyadmin:
-    image: 'phpmyadmin/phpmyadmin:5.2-fpm-alpine'
+    image: 'phpmyadmin/phpmyadmin:5.2-apache'
     container_name: phpmyadmin
     environment:
       PMA_HOSTS: db1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pma.rule=Host(`pma.cliente1.com.br`)"
-      - "traefik.http.routers.pma.entrypoints=websecure"
-      - "traefik.http.routers.pma.tls.certresolver=myresolver"
+      - "traefik.http.routers.pma.rule=Host(`pma.cliente1.54.89.158.15.sslip.io`)"
+      - "traefik.http.routers.pma.entrypoints=web"
     networks:
       - proxy-nw
       - client1-nw

@@ -3,9 +3,8 @@ services:
     image: 'laravel-app:latest'
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.koalapp.rule=Host(`cliente1.com.br`)"
+      - "traefik.http.routers.koalapp.rule=Host(`cliente1.54.89.158.15.sslip.io`)"
       - "traefik.http.routers.koalapp.entrypoints=web"
-      - "traefik.http.routers.koalapp.tls.certresolver=myresolver"
       - "traefik.http.services.koalapp.loadbalancer.server.port=80"
     networks:
       - proxy-nw

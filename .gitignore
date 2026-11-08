@@ -1,3 +1,8 @@
 # Dados de runtime do banco (nao versionar)
 deploy/*/mysql_data/
 *.sock
+docs
+
+# Plano de execução interno do grupo (não versionar)
+/PLANO_EXECUCAO.md
+CLAUDE.md

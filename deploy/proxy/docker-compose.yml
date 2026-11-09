@@ -1,10 +1,14 @@
 services:
   traefik:
-    image: traefik:v2.11
+    image: traefik:v3.6.1
     # v2.10 tentava falar com a API do Docker numa versão antiga (1.24), incompatível
-    # com o Docker Engine instalado (29.9.3, mínimo exigido 1.40); a variável de
-    # ambiente DOCKER_API_VERSION não é respeitada pelo provider Docker do Traefik,
-    # então a correção real é essa: usar uma versão do Traefik com cliente Docker mais novo
+    # com o Docker Engine instalado (29.9.3, mínimo exigido 1.40). A variável de
+    # ambiente DOCKER_API_VERSION não é respeitada pelo provider Docker do Traefik v2.
+    # O changelog oficial do v3.6.1 lista "Auto-negotiate Docker API Version" como
+    # correção de bug — exatamente esse problema. Confirmado no guia de migração:
+    # nenhuma das nossas flags/labels é afetada (a única renomeação de label,
+    # traefik.docker.network -> traefik.swarm.network, é específica do modo Swarm,
+    # que não usamos).
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"

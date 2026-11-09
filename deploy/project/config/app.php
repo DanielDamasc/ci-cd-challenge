@@ -86,6 +86,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Nome do cliente desta instância
+    |--------------------------------------------------------------------------
+    |
+    | Mesma imagem Docker roda para todos os clientes (deploy/clienteN/); cada
+    | docker-compose.yml define CLIENT_NAME ("cliente1", "cliente2", ...) pra
+    | essa instância conseguir se identificar nas próprias páginas/logs.
+    |
+    */
+
+    'client_name' => env('CLIENT_NAME', 'cliente'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |

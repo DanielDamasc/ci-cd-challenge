@@ -7,6 +7,9 @@ services:
       # sem .env dentro da imagem (ele é gitignored e nunca entra no build) — o Laravel
       # lê essas variáveis direto do ambiente do container, funciona igual a um .env
       APP_KEY: '${APP_KEY}'
+      CLIENT_NAME: cliente1
+      # não é segredo (só identifica a instância nas próprias páginas/logs),
+      # por isso fica fixo aqui em vez de vir de um secret do GitHub
       APP_ENV: production
       APP_DEBUG: 'false'
       DB_CONNECTION: mysql
@@ -17,9 +20,9 @@ services:
       DB_PASSWORD: '${DB_PASSWORD}'
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.koalapp.rule=Host(`cliente1.54.89.158.15.sslip.io`)"
-      - "traefik.http.routers.koalapp.entrypoints=web"
-      - "traefik.http.services.koalapp.loadbalancer.server.port=80"
+      - "traefik.http.routers.cliente1app.rule=Host(`cliente1.54.89.158.15.sslip.io`)"
+      - "traefik.http.routers.cliente1app.entrypoints=web"
+      - "traefik.http.services.cliente1app.loadbalancer.server.port=80"
       - "traefik.docker.network=proxy-nw"
       # desambigua: o container está em 2 redes (proxy-nw e client1-nw), e sem essa
       # label o Traefik não sabe por qual delas alcançar o container (causava o 404)

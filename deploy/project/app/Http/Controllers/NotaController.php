@@ -11,7 +11,10 @@ class NotaController extends Controller
 {
     public function index(): View
     {
-        return view('notas', ['notas' => Nota::latest()->get()]);
+        return view('notas', [
+            'notas' => Nota::latest()->get(),
+            'cliente' => config('app.client_name'),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

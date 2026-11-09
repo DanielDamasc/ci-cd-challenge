@@ -7,21 +7,28 @@ services:
     # não podiam ser roteadas direto pelo Traefik)
     container_name: phpmyadmin
     environment:
-      PMA_HOSTS: db1
+      # lista separada por vírgula: o phpMyAdmin mostra um seletor de servidor na
+      # tela de login, um pra cada host — permite administrar os dois bancos
+      # (cliente1 e cliente2) pelo mesmo painel, sem precisar de um pma por cliente
+      PMA_HOSTS: db1,db2
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pma.rule=Host(`pma.cliente1.54.89.158.15.sslip.io`)"
       - "traefik.http.routers.pma.entrypoints=web"
       - "traefik.docker.network=proxy-nw"
-      # mesma correção do cliente1: container tem 2 redes, sem essa label o Traefik
-      # fica sem saber por qual delas alcançar o container
+      # mesma correção do cliente1: container tem múltiplas redes, sem essa label
+      # o Traefik fica sem saber por qual delas alcançar o container
     networks:
       - proxy-nw
       - client1-nw
+      - client2-nw
+      # precisa estar nas redes dos dois clientes pra alcançar tanto o db1 quanto o db2
     restart: unless-stopped
 
 networks:
   proxy-nw:
     external: true
   client1-nw:
+    external: true
+  client2-nw:
     external: true

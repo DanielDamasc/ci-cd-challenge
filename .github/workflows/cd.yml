@@ -101,3 +101,17 @@ jobs:
             # aplica migrations pendentes no banco (sessions, cache, jobs, etc.);
             # --force evita o prompt de confirmação que o Laravel pede em produção;
             # roda em todo deploy, mas é seguro: migration já aplicada não roda de novo
+
+            cd ../cliente2
+            # mesma rotina do cliente1, repetida pro cliente2 — mesma imagem/tag,
+            # só muda o par de secrets (banco e app key isolados por cliente)
+            export APP_KEY_CLIENTE2=${{ secrets.APP_KEY_CLIENTE2 }}
+            export DB_PASSWORD_CLIENTE2=${{ secrets.DB_PASSWORD_CLIENTE2 }}
+            docker compose pull laravel-app
+            docker compose up -d laravel-app
+            for i in $(seq 1 15); do
+              docker compose exec -T db2 mysqladmin ping -h localhost --silent && break
+              echo "Aguardando o MySQL (cliente2) ficar pronto... ($i/15)"
+              sleep 3
+            done
+            docker compose exec -T laravel-app php artisan migrate --force

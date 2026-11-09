@@ -16,7 +16,7 @@
     <p><strong>Esta aplicação é uma demonstração do seminário "Desafio CI/CD".</strong></p>
 
     <h1>Teste de persistência</h1>
-    <p>Qualquer texto salvo aqui fica gravado no banco do cliente1.</p>
+    <p>Qualquer texto salvo aqui fica gravado no banco do {{ $cliente }}.</p>
 
     <form method="POST" action="/notas">
         @csrf

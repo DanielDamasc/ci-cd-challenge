@@ -1,0 +1,55 @@
+name: CD # nome do workflow (não precisa ser igual ao nome do arquivo)
+
+on:
+  workflow_run:
+    # "escuta" outro workflow em vez de reagir direto a um push — é assim que CI e CD
+    # ficam em arquivos separados mas o CD só roda depois do CI
+    workflows: ["CI"] # precisa bater exatamente com o "name:" definido em ci.yml
+    types: [completed] # dispara quando o workflow "CI" terminar (com sucesso ou falha)
+    branches: [main] # só considera execuções do CI feitas na main
+
+jobs:
+  build-and-push:
+    # condição extra: o job só executa de fato se o CI tiver terminado com SUCESSO.
+    # Se algum teste falhou, o "completed" acontece mas a conclusion é "failure",
+    # então essa linha impede o build/push de uma imagem com código quebrado.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest # runner novo, do zero, criado só para este job
+
+    steps:
+      - name: Checkout (mesmo commit que passou no CI)
+        uses: actions/checkout@v4
+        with:
+          # por padrão o checkout pegaria o estado ATUAL da main, que pode já ter mudado
+          # desde que o CI rodou; fixando o head_sha garantimos que a imagem é construída
+          # exatamente a partir do commit que foi testado e aprovado
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Calcular tag (SemVer + short hash)
+        id: tag # dá um nome a este step, pra outros steps poderem ler o valor que ele gerar
+        run: |
+          VERSION=$(cat VERSION)
+          # lê o número de versão do arquivo VERSION na raiz do repo (ex.: "1.0.0")
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          # pega os 7 primeiros caracteres do hash do commit atual (ex.: "a1b2c3d")
+          echo "tag=v${VERSION}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          # salva o resultado (ex.: "v1.0.0-a1b2c3d") como output do step, pra usar nos steps seguintes
+          # via ${{ steps.tag.outputs.tag }} — nunca usamos "latest", conforme pede a proposta
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          # username/token guardados como Secrets no GitHub (nunca em texto puro no arquivo),
+          # pra não expor credenciais do Docker Hub no código ou nos logs
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build da imagem
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:${{ steps.tag.outputs.tag }} deploy/project
+        # builda a imagem usando o Dockerfile dentro de deploy/project/ (contexto de build),
+        # já nomeando (tag) a imagem com usuario/laravel-app:v1.0.0-a1b2c3d
+
+      - name: Push para o Docker Hub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:${{ steps.tag.outputs.tag }}
+        # envia a imagem recém-criada pro repositório no Docker Hub, com a tag versionada
+        # (é essa tag que a Fase 3 — deploy via SSH — vai usar pra saber o que "docker pull")

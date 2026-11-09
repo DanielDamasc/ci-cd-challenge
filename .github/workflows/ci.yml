@@ -1,38 +1,46 @@
-name: CI
+name: CI # nome que aparece na aba "Actions" do GitHub e é usado pelo cd.yml para "escutar" este workflow
 
 on:
   push:
-    branches: [main]
+    branches: [main] # roda a cada push direto na main
   pull_request:
-    branches: [main]
+    branches: [main] # roda também em PRs que apontam pra main (valida antes do merge)
 
 defaults:
   run:
+    # todo "run:" dos steps abaixo executa a partir dessa pasta,
+    # porque o código Laravel não fica na raiz do repo, fica em deploy/project/
     working-directory: deploy/project
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  test: # nome do job (poderia ter vários jobs em paralelo; aqui só tem um)
+    runs-on: ubuntu-latest # a "máquina" (runner) que o GitHub cria do zero pra rodar este job
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        # baixa o código do repositório pra dentro do runner (sem isso não existe nada pra testar)
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.4"
+          php-version: "8.4" # mesma versão usada no Dockerfile (deploy/project/Dockerfile)
           extensions: mbstring, bcmath, intl, gd, zip, exif, pcntl, pdo_sqlite, sqlite3
-          coverage: none
+          # extensões que o Laravel/composer.json precisam; pdo_sqlite e sqlite3 são
+          # as que os testes usam (phpunit.xml configura DB_DATABASE=:memory:)
+          coverage: none # desliga coleta de cobertura de testes (não é exigida pelo seminário, deixa o job mais rápido)
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
+        # instala as dependências PHP do composer.json (sem isso o autoload do Laravel não funciona)
 
       - name: Copy .env
         run: cp .env.example .env
+        # o Laravel precisa de um arquivo .env pra existir; copiamos o exemplo do repo
 
       - name: Generate app key
         run: php artisan key:generate
+        # gera a APP_KEY (usada p/ criptografia de sessão/cookies); sem ela o Laravel recusa a rodar
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -41,9 +49,14 @@ jobs:
 
       - name: Install npm dependencies
         run: npm ci
+        # instala as dependências do package.json (Vite, Tailwind etc.), igual ao composer install só que pro front-end
 
       - name: Build frontend assets
         run: npm run build
+        # gera o manifest do Vite em public/build/; a view welcome.blade.php usa @vite(...),
+        # então sem esse build o teste de "GET / -> 200" falharia
 
       - name: Run tests
         run: php artisan test
+        # roda a suíte de testes do Laravel (PHPUnit); se algum teste falhar, o job falha,
+        # e isso é o que impede o cd.yml de rodar (ele só dispara se este job terminar com sucesso)

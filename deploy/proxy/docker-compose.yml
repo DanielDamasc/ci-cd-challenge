@@ -1,6 +1,11 @@
 services:
   traefik:
     image: traefik:v2.10
+    environment:
+      # o cliente Docker interno do Traefik tenta usar a API versão 1.24 por padrão,
+      # mas o Docker Engine instalado (29.9.3) exige no mínimo 1.40 — essa variável
+      # força a versão certa, sem precisar trocar a versão do Traefik
+      DOCKER_API_VERSION: "1.44"
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"

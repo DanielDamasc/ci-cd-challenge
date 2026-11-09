@@ -16,6 +16,10 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest # runner novo, do zero, criado só para este job
 
+    outputs:
+      # expõe a tag calculada aqui pro job "deploy" conseguir ler (needs.build-and-push.outputs.tag)
+      tag: ${{ steps.tag.outputs.tag }}
+
     steps:
       - name: Checkout (mesmo commit que passou no CI)
         uses: actions/checkout@v4
@@ -52,4 +56,36 @@ jobs:
       - name: Push para o Docker Hub
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:${{ steps.tag.outputs.tag }}
         # envia a imagem recém-criada pro repositório no Docker Hub, com a tag versionada
-        # (é essa tag que a Fase 3 — deploy via SSH — vai usar pra saber o que "docker pull")
+        # (é essa tag que o job "deploy" abaixo vai usar pra saber o que "docker pull")
+
+  deploy:
+    needs: build-and-push
+    # espera o build-and-push terminar (e só roda se ele tiver tido sucesso)
+    runs-on: ubuntu-latest
+    # este runner não roda a aplicação — ele só abre uma conexão SSH e manda comandos
+    # pro servidor de verdade (a EC2) executar
+
+    steps:
+      - name: Deploy no servidor via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/ci-cd-challenge
+            git pull
+            # garante que o docker-compose.yml no servidor é o mesmo que acabou de passar no CI
+            # (sem isso, o deploy usaria uma versão desatualizada do compose, não do código da app)
+            cd deploy/cliente1
+            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            export TAG=${{ needs.build-and-push.outputs.tag }}
+            export APP_KEY=${{ secrets.APP_KEY }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            # essas variáveis são lidas pelo docker-compose.yml do cliente1
+            # (image, e o bloco "environment:" que configura Laravel + MySQL sem precisar de .env)
+            docker compose pull laravel-app
+            # baixa a imagem nova (a tag exata que acabou de ser publicada) do Docker Hub
+            docker compose up -d laravel-app
+            # recria SÓ o container do app com a imagem nova; o container do banco (db1)
+            # nem é tocado, exatamente como a proposta pede ("atualiza apenas o container do cliente")

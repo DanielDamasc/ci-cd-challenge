@@ -1,6 +1,20 @@
 services:
   laravel-app:
-    image: 'laravel-app:latest'
+    # imagem e tag vêm do ambiente (exportados no script de deploy via SSH),
+    # nunca fixas aqui — é assim que o cd.yml controla qual versão sobe
+    image: '${DOCKERHUB_USERNAME}/laravel-app:${TAG}'
+    environment:
+      # sem .env dentro da imagem (ele é gitignored e nunca entra no build) — o Laravel
+      # lê essas variáveis direto do ambiente do container, funciona igual a um .env
+      APP_KEY: '${APP_KEY}'
+      APP_ENV: production
+      APP_DEBUG: 'false'
+      DB_CONNECTION: mysql
+      DB_HOST: db1
+      DB_PORT: 3306
+      DB_DATABASE: client1_db
+      DB_USERNAME: root
+      DB_PASSWORD: '${DB_PASSWORD}'
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.koalapp.rule=Host(`cliente1.54.89.158.15.sslip.io`)"
@@ -15,7 +29,7 @@ services:
   db1:
     image: mysql:8.4
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
       MYSQL_DATABASE: client1_db
     volumes:
       - ./mysql_data:/var/lib/mysql

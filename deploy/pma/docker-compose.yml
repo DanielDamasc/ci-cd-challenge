@@ -1,6 +1,8 @@
 services:
   phpmyadmin:
-    image: 'phpmyadmin/phpmyadmin:5.2-apache'
+    image: 'phpmyadmin/phpmyadmin:apache'
+    # tag "flutuante" da variante Apache (sem versão fixa) — evita depender de uma
+    # tag de patch específica (5.2-apache) que pode deixar de existir no Docker Hub
     container_name: phpmyadmin
     environment:
       PMA_HOSTS: db1

@@ -1,8 +1,10 @@
 services:
   phpmyadmin:
-    image: 'phpmyadmin/phpmyadmin:apache'
-    # tag "flutuante" da variante Apache (sem versão fixa) — evita depender de uma
-    # tag de patch específica (5.2-apache) que pode deixar de existir no Docker Hub
+    image: 'phpmyadmin/phpmyadmin:5.2'
+    # "5.2-apache" nunca existiu nesse repositório (não existe sufixo "-apache").
+    # A tag sem sufixo já é a variante com Apache embutido, servindo HTTP direto
+    # (as variantes "fpm"/"fpm-alpine" são só FastCGI, sem servidor web, por isso
+    # não podiam ser roteadas direto pelo Traefik)
     container_name: phpmyadmin
     environment:
       PMA_HOSTS: db1

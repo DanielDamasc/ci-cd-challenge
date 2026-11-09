@@ -30,7 +30,10 @@ services:
       - proxy-nw
       - client1-nw
     depends_on:
-      - db1
+      db1:
+        condition: service_healthy
+        # espera o db1 ficar HEALTHY (não só "iniciado") antes de subir o app —
+        # substitui o loop manual de "mysqladmin ping" que existia no cd.yml
 
   db1:
     image: mysql:8.4
@@ -45,6 +48,17 @@ services:
       - ./mysql_data:/var/lib/mysql
     networks:
       - client1-nw
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      # -h 127.0.0.1 força TCP de verdade; "localhost" dava falso positivo no
+      # servidor temporário (--skip-networking) que o MySQL usa no PRIMEIRO boot
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+      # start_period: falhas nesse intervalo não contam como tentativa — dá
+      # margem pro boot a frio (inicialização do volume vazio) sem marcar
+      # unhealthy antes da hora; depois disso, vale o retries/interval normal
 
 networks:
   proxy-nw:

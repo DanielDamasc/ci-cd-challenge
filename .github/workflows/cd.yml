@@ -88,15 +88,10 @@ jobs:
             # baixa a imagem nova (a tag exata que acabou de ser publicada) do Docker Hub
             docker compose up -d laravel-app
             # recria SÓ o container do app com a imagem nova; o container do banco (db1)
-            # nem é tocado, exatamente como a proposta pede ("atualiza apenas o container do cliente")
-            for i in $(seq 1 15); do
-              docker compose exec -T db1 mysqladmin ping -h localhost --silent && break
-              echo "Aguardando o MySQL ficar pronto... ($i/15)"
-              sleep 3
-            done
-            # "depends_on" só garante que o db1 COMEÇOU a subir, não que já aceita conexões
-            # (o MySQL pode levar alguns segundos pra inicializar) — sem essa espera,
-            # o migrate abaixo podia rodar antes do banco estar pronto (erro "Connection refused")
+            # nem é tocado, exatamente como a proposta pede ("atualiza apenas o container do cliente").
+            # Esse comando agora SÓ RETORNA depois que o db1 estiver "healthy" (ver healthcheck +
+            # depends_on no docker-compose.yml) — não precisa mais de loop manual de espera aqui;
+            # se o db1 nunca ficar saudável, esse comando falha com erro claro.
             docker compose exec -T laravel-app php artisan migrate --force
             # aplica migrations pendentes no banco (sessions, cache, jobs, etc.);
             # --force evita o prompt de confirmação que o Laravel pede em produção;
@@ -109,9 +104,4 @@ jobs:
             export DB_PASSWORD_CLIENTE2=${{ secrets.DB_PASSWORD_CLIENTE2 }}
             docker compose pull laravel-app
             docker compose up -d laravel-app
-            for i in $(seq 1 15); do
-              docker compose exec -T db2 mysqladmin ping -h localhost --silent && break
-              echo "Aguardando o MySQL (cliente2) ficar pronto... ($i/15)"
-              sleep 3
-            done
             docker compose exec -T laravel-app php artisan migrate --force

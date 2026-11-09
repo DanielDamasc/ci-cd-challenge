@@ -89,3 +89,7 @@ jobs:
             docker compose up -d laravel-app
             # recria SÓ o container do app com a imagem nova; o container do banco (db1)
             # nem é tocado, exatamente como a proposta pede ("atualiza apenas o container do cliente")
+            docker compose exec -T laravel-app php artisan migrate --force
+            # aplica migrations pendentes no banco (sessions, cache, jobs, etc.);
+            # --force evita o prompt de confirmação que o Laravel pede em produção;
+            # roda em todo deploy, mas é seguro: migration já aplicada não roda de novo

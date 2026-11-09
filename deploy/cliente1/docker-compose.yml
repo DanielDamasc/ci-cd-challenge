@@ -31,6 +31,10 @@ services:
 
   db1:
     image: mysql:8.4
+    command: --innodb-buffer-pool-size=128M
+    # o padrão do MySQL 8 tenta alocar um buffer bem maior, baseado na RAM que ele vê —
+    # perigoso num servidor com ~900MB de RAM total rodando outros 3 containers junto
+    # (foi o que causou o OOM Kill: db1 morto com exit code 137)
     environment:
       MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
       MYSQL_DATABASE: client1_db

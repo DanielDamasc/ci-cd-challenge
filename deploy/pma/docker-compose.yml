@@ -8,6 +8,9 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.pma.rule=Host(`pma.cliente1.54.89.158.15.sslip.io`)"
       - "traefik.http.routers.pma.entrypoints=web"
+      - "traefik.docker.network=proxy-nw"
+      # mesma correção do cliente1: container tem 2 redes, sem essa label o Traefik
+      # fica sem saber por qual delas alcançar o container
     networks:
       - proxy-nw
       - client1-nw

@@ -1,5 +1,7 @@
 # Desafio CI/CD — Seminário
 
+[![Board Status](https://dev.azure.com/dandamasceno04/b979674b-0c9b-4b99-97bf-30e95b9c25d5/39ce4d65-2203-4214-8db4-4fe8d1a0c3b5/_apis/work/boardbadge/4a25ae1a-4454-43df-b79b-11727d7c4e8d)](https://dev.azure.com/dandamasceno04/b979674b-0c9b-4b99-97bf-30e95b9c25d5/_boards/board/t/39ce4d65-2203-4214-8db4-4fe8d1a0c3b5/Issues/)
+
 Projeto de seminário universitário: uma pipeline de CI/CD completa que builda a aplicação, publica a imagem Docker num registro e faz o deploy automático em um servidor, atualizando apenas o container do cliente em questão — sem derrubar o banco de dados nem os demais clientes.
 
 ## Estrutura do pipeline
